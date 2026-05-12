@@ -1,8 +1,6 @@
-import 'package:flutter/cupertino.dart';
-import 'package:untitled/routes/index.dart';
+import 'package:flutter/material.dart';
+import 'app/app.dart';
 
-void main(List<String> args) {
-  // runApp 启动应用
-  //
-  runApp(getRootWidget());
+void main() {
+  runApp(const App());
 }
