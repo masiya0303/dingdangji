@@ -3,7 +3,7 @@ name: Sync to Gitee
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   sync:
