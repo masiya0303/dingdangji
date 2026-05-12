@@ -111,6 +111,10 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _backgroundImage = _previewWallpaper;
       _backgroundImageBytes = _previewWallpaperImage;
+      // 应用壁纸后返回主页面
+      if (_servers.isNotEmpty) {
+        _rightPageType = RightPageType.mainContent;
+      }
     });
   }
 
