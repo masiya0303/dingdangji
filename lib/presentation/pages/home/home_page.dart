@@ -21,6 +21,9 @@ class _HomePageState extends State<HomePage> {
   RightPageType _rightPageType = RightPageType.welcome;
   String? _backgroundImage;
   String? _previewWallpaper;
+  Uint8List? _previewWallpaperImage;
+  Uint8List? _backgroundImageBytes;
+  final _imagePicker = ImagePicker();
 
   Server? get _selectedServer =>
       _selectedServerIndex != null ? _servers[_selectedServerIndex!] : null;
@@ -93,12 +96,21 @@ class _HomePageState extends State<HomePage> {
   void _setPreviewWallpaper(String? colorKey) {
     setState(() {
       _previewWallpaper = colorKey;
+      _previewWallpaperImage = null;
+    });
+  }
+
+  void _setPreviewWallpaperImage(Uint8List bytes) {
+    setState(() {
+      _previewWallpaperImage = bytes;
+      _previewWallpaper = null;
     });
   }
 
   void _applyWallpaper() {
     setState(() {
       _backgroundImage = _previewWallpaper;
+      _backgroundImageBytes = _previewWallpaperImage;
     });
   }
 
@@ -106,6 +118,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _backgroundImage = null;
       _previewWallpaper = null;
+      _backgroundImageBytes = null;
+      _previewWallpaperImage = null;
     });
   }
 
@@ -291,7 +305,7 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => _showWallpaperPicker(),
+                      onTap: () => _showWallpaperOptions(),
                       child: Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
@@ -303,8 +317,16 @@ class _HomePageState extends State<HomePage> {
                             color: const Color(0xFFEEEEEE),
                             width: 1,
                           ),
+                          image: _previewWallpaperImage != null
+                              ? DecorationImage(
+                                  image: MemoryImage(_previewWallpaperImage!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
                         ),
-                        child: _previewWallpaper == null
+                        child:
+                            (_previewWallpaper == null &&
+                                _previewWallpaperImage == null)
                             ? const Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -316,7 +338,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     SizedBox(height: 12),
                                     Text(
-                                      '点击选择壁纸',
+                                      '点击上传壁纸',
                                       style: TextStyle(
                                         color: Colors.grey,
                                         fontSize: 14,
@@ -352,7 +374,9 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: _previewWallpaper != null
+                          onPressed:
+                              (_previewWallpaper != null ||
+                                  _previewWallpaperImage != null)
                               ? () {
                                   _clearWallpaper();
                                 }
@@ -370,7 +394,9 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: _previewWallpaper != null
+                          onPressed:
+                              (_previewWallpaper != null ||
+                                  _previewWallpaperImage != null)
                               ? () {
                                   _applyWallpaper();
                                 }
@@ -396,7 +422,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showWallpaperPicker() {
+  void _showWallpaperOptions() {
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -414,16 +440,58 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
+            Row(
               children: [
-                _buildWallpaperOption(null),
-                _buildWallpaperOption('blue'),
-                _buildWallpaperOption('purple'),
-                _buildWallpaperOption('green'),
-                _buildWallpaperOption('orange'),
-                _buildWallpaperOption('pink'),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      _pickWallpaperImage();
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFEEEEEE),
+                          width: 1,
+                        ),
+                      ),
+                      child: const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.upload, size: 24, color: Colors.grey),
+                            SizedBox(height: 4),
+                            Text(
+                              '上传图片',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      _buildWallpaperOption(null),
+                      _buildWallpaperOption('blue'),
+                      _buildWallpaperOption('purple'),
+                      _buildWallpaperOption('green'),
+                      _buildWallpaperOption('orange'),
+                      _buildWallpaperOption('pink'),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -431,6 +499,18 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  Future<void> _pickWallpaperImage() async {
+    final pickedFile = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _setPreviewWallpaperImage(bytes);
+      });
+    }
   }
 
   Widget _buildWallpaperOption(String? colorKey) {
@@ -506,21 +586,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildMainContent() {
     return Container(
-      decoration: _backgroundImage != null
-          ? BoxDecoration(
-              color: Colors.white,
-              image: DecorationImage(
-                image: AssetImage('assets/wallpapers/$_backgroundImage.png'),
-                fit: BoxFit.cover,
-              ),
-            )
-          : BoxDecoration(
-              gradient:
-                  _backgroundImage == null && _getWallpaperGradient() != null
-                  ? _getWallpaperGradient()
-                  : null,
-              color: _backgroundImage == null ? Colors.white : null,
-            ),
+      decoration: _getBackgroundDecoration(),
       child: Column(
         children: [
           _buildChatHeader(),
@@ -542,6 +608,23 @@ class _HomePageState extends State<HomePage> {
       end: Alignment.bottomRight,
       colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.1)],
     );
+  }
+
+  BoxDecoration _getBackgroundDecoration() {
+    if (_backgroundImageBytes != null) {
+      return BoxDecoration(
+        image: DecorationImage(
+          image: MemoryImage(_backgroundImageBytes!),
+          fit: BoxFit.cover,
+        ),
+      );
+    } else if (_backgroundImage != null) {
+      final gradient = _getWallpaperGradient();
+      if (gradient != null) {
+        return BoxDecoration(gradient: gradient);
+      }
+    }
+    return const BoxDecoration(color: Colors.white);
   }
 
   Widget _buildChatHeader() {
