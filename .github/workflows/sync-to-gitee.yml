@@ -3,7 +3,7 @@ name: Sync to Gitee
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   sync:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Sync to Gitee
         run: |
