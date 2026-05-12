@@ -8,7 +8,7 @@ class AppColors {
   static const Color darkGray = Color(0xFFF7F7F7);
   static const Color textPrimary = Color(0xFF1F1F1F);
   static const Color textSecondary = Color(0xFF8A8A8A);
-  static const Color notification = Color(0xFFFA3737);
+  static const Color notification = Color.fromARGB(255, 251, 209, 209);
   static const Color border = Color(0xFFE0E0E0);
   static const Color homeBg = Color(0xFFF0F0F0);
 }
